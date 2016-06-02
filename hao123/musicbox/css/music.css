@@ -921,11 +921,6 @@ a.gamepicture:hover {
 .box-col3 .pre-arrow {
     background-position: -563px -1123px
 }
-/**
-#hao123-wuliao .musicbox {
-    margin: 20px 0 0 30px
-}
-**/
 #hao123-wuliao .sidelink2 {
     margin-left: 30px
 }
@@ -972,11 +967,6 @@ a.gamepicture:hover {
     _margin-right: -3px;
     width: 299px
 }
-/**
-.width-lg #hao123-wuliao .musicbox {
-    margin: 20px 0 0 19px
-}
-**/
 .width-lg #hao123-wuliao .box-site .sidelink2,.width-lg #hao123-wuliao .box-site .sidelink2 li {
     width: 250px
 }
@@ -2008,209 +1998,7 @@ a.gamepicture:hover {
 .width-nr .relax-ctab-content .relax-ctab-slider-item .width-nr-hide {
     display: none
 }
-.musicmask {
-	overflow:hidden;
-	height: 40px;
-    line-height: 40px;
-    margin-right:44px;
-    position: relative;
-}
-.musicbox {
-    position: relative;
-    height: 30px;
-}
 
-.musicbox .banner {
-    display: block;
-    float:left;
-    width: 180px;
-    padding:0px 10px;
-}
-
-.musicbox .info {
-    width: 120px
-}
-
-.musicbox .title {
-    float: left;
-    line-height: 25px;
-    white-space: nowrap;
-    font-size: 12px;
-}
-
-.musicbox .title .name {
-    color: #b4cbff;
-    font-weight: bold
-}
-
-.musicbox .title .split {
-    color: #b4cbff;
-    padding: 0 5px
-}
-
-.musicbox .title .author {
-    color: #b4cbff
-}
-
-.musicbox .play {
-    display: block;
-    float:left;
-}
-
-.musicbox .play-btn {
-    display: block;
-    width: 39px;
-    height: 39px;
-    background: url(https://gss1.bdstatic.com/5eN1dDebRNRTm2_p8IuM_a/v5/TL/He/Oh/M3/pf/6/musicbox.png) no-repeat -235px -2px
-}
-
-.musicbox .play-btn:hover {
-    background-position: -285px -2px
-}
-
-.musicbox .playing {
-    background-position: -236px -44px
-}
-
-.musicbox .playing:hover {
-    background-position: -286px -44px
-}
-
-.musicbox .options {
-	width: 180px;
-    display: block;
-    float:left;
-}
-.musicbox .options .control {
-	position: absolute;
-    top: 15px;
-}
-.musicbox .options .control li {
-    vertical-align: top;
-    margin-right: 12px;
-    position: relative;
-}
-
-.musicbox .options .btn {
-    width: 16px;
-    height: 16px;
-    display: inline-block;
-    background: url(https://gss1.bdstatic.com/5eN1dDebRNRTm2_p8IuM_a/v5/TL/He/Oh/M3/pf/6/musicbox.png) no-repeat
-}
-
-.musicbox .options .next {
-    background-position: -9px -102px
-}
-
-.musicbox .options .next:hover {
-    background-position: -9px -80px
-}
-
-.musicbox .options .prev {
-    background-position: -35px -102px
-}
-
-.musicbox .options .prev:hover {
-    background-position: -35px -80px
-}
-
-.musicbox .options .open {
-    background-position: -62px -102px
-}
-
-.musicbox .options .open:hover {
-    background-position: -62px -80px
-}
-
-.musicbox .options .vol-mid {
-    background-position: -87px -97px
-}
-
-.musicbox .options .vol-large {
-    background-position: -87px -113px
-}
-
-.musicbox .options .vol-mute {
-    background-position: -87px -81px
-}
-.musicbox .banner .process-slider {
-    display: inline-block;
-    height: 2px;
-    width: 90%;
-    cursor: pointer;
-    background: #898989;
-    vertical-align: top;
-    margin-top: 5px;
-    position: relative;
-    font-size: 0
-}
-
-.musicbox .banner .ui-slider-range {
-    font-size: 0;
-    background: #2d9cf0;
-    height: 2px
-}
-
-.musicbox .banner .ui-slider-handle {
-    font-size: 0;
-    width: 8px;
-    height: 8px;
-    top: -3px;
-    position: absolute;
-    background: url(https://gss1.bdstatic.com/5eN1dDebRNRTm2_p8IuM_a/v5/TL/He/Oh/M3/pf/6/musicbox.png) no-repeat -109px -83px
-}
-.musicbox .toggle{
-	display: block;
-    float:left;
-}
-.musicbox .toggle .toggle-btn{
-	display: inline-block;
-    width:20px;
-    height: 100%;
-}
-.musicbox .options .vol-slider {
-    display: inline-block;
-    height: 60px;
-    width: 2px;
-    cursor: pointer;
-    background: #898989;
-    vertical-align: top;
-    top: -65px;
-    left:4px;
-    position: absolute;
-    font-size: 0
-}
-
-.musicbox .options .ui-slider-range {
-    font-size: 0;
-    background: #2d9cf0;
-    height: 2px
-}
-
-.musicbox .options .ui-slider-handle {
-    font-size: 0;
-    width: 8px;
-    height: 8px;
-    left:-3px;
-    position: absolute;
-    background: url(https://gss1.bdstatic.com/5eN1dDebRNRTm2_p8IuM_a/v5/TL/He/Oh/M3/pf/6/musicbox.png) no-repeat -109px -83px
-}
-/**
-.width-lg .musicbox {
-    width: 250px
-}
-
-.width-lg .musicbox .banner {
-    border-bottom: 1px solid #a9f3fe;
-    width: 220px;
-    height: 24px;
-    background-color: #00dcfe
-}
-
-.width-lg .musicbox .info {
-    width: 160px
-}
-**/
 .box-col3 {
     position: relative
 }
@@ -4087,3 +3875,241 @@ a.game-remen-content-long:hover {
 .css_WrJVJDdXmn {
     height: 88px
 }
+
+/**
+ * 音乐盒CSS3样式代码开始
+ * 
+ * 总宽度400
+ * 总高度40
+ * 
+ * toggle:20x40
+ * logo:40x40
+ * banner:180x40 (10+160+10)x40
+ * options:160x40 (10+25+5+25+5+25+10+15+10+15+12)x40
+ * 边框4
+ * 
+ */
+#hao123-wuliao .musicbox {
+	margin-right:20px;
+}
+.musicbox {
+    position: relative;
+    display:inline-block;
+    width: 400px;
+    height: 40px;
+}
+.musicbox .toggle {
+    width: 18px;
+    height:100%;
+    float:left;
+    border-color: #eaeaea;
+    border-style: solid;
+    border-width:0 1px;
+}
+.musicbox .toggle .toggle-btn{
+	display:inline-block;
+	height:100%;
+	width:100%;
+}
+.musicbox .toggle .toggle-btn.open{
+	background: url(../img/musicbox.png) no-repeat -249px -22px;
+}
+.musicbox .toggle .toggle-btn.open:hover{
+	background: url(../img/musicbox.png) no-repeat -249px 4px;
+}
+.musicbox .toggle .toggle-btn.close{
+	background: url(../img/musicbox.png) no-repeat -267px -22px;
+}
+.musicbox .toggle .toggle-btn.close:hover{
+	background: url(../img/musicbox.png) no-repeat -267px 4px;
+}
+.musicbox .logo {
+    width: 39px;
+    height:100%;
+    float:left;
+    border-right: 1px solid #eaeaea;
+}
+.musicbox .logo .logo-btn {
+    display:inline-block;
+	height:100%;
+	width:100%;
+    border-right: 1px solid #eaeaea;
+    background: url(../img/musicbox.png) no-repeat -283px -23px;
+}
+.musicbox .banner {
+	float:left;
+    width: 170px;
+    height:100%;
+    padding-left:10px;
+    position:relative;
+}
+.musicbox .banner .info{
+	font-family: 宋, arial;
+	font-size:12px;
+	line-height:3em;
+}
+.musicbox .banner .title{
+	
+}
+.musicbox .banner .title .name{
+	color:#b4cbff;
+}
+.musicbox .banner .title .split{
+	color:#b4cbff;
+}
+.musicbox .banner .title .author{
+	color:#b4cbff;
+}
+.musicbox .banner .process-slider{
+	display: inline-block;
+    height: 2px;
+    width: 170px;
+    position: absolute;
+    top:27px;
+    cursor: pointer;
+    background: #cecece;
+    vertical-align: top;
+    font-size: 0
+}
+.musicbox .banner .ui-slider-range {
+    font-size: 0;
+    background: #7ba1f7;
+    height: 2px
+}
+
+.musicbox .banner .ui-slider-handle {
+	position: absolute;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    font-size: 0;
+    background: url(../img/musicbox.png) no-repeat -232px -39px
+}
+
+.musicbox .options {
+    width: 142px;
+    height:100%;
+    float:left;
+    padding-left:5px;
+    padding-right:12px;
+    border-right: 1px solid #eaeaea;
+}
+.musicbox .options .control {
+	height:100%; 
+}
+.musicbox .options .control li {
+    position: relative;
+    float:left;
+    top:7px;
+}
+
+.musicbox .options .btn {
+    display: inline-block;
+    background: url(../img/musicbox.png) no-repeat;
+}
+.musicbox .options .prev {
+	width: 25px;
+    height: 25px;
+    margin-left:5px;
+    background-position: 0px -28px;
+}
+.musicbox .options .prev:hover {
+    background-position: 0px 0px;
+}
+.musicbox .options .play {
+	width: 25px;
+    height: 25px;
+    margin-left:5px;
+    background-position: -28px -28px;
+}
+.musicbox .options .play:hover {
+    background-position: -28px -0px;
+}
+.musicbox .options .next {
+	width: 25px;
+    height: 25px;
+    margin-left:5px;
+    background-position: -117px -28px
+}
+.musicbox .options .next:hover {
+    background-position: -117px -2px
+}
+
+.musicbox .options .vol-mid {
+	width: 16px;
+    height: 25px;
+    margin-left:10px;
+    background-position: -178px -28px;
+}
+.musicbox .options .vol-mid:hover{
+	width: 16px;
+    height: 25px;
+    margin-left:10px;
+    background-position: -178px -2px;
+}
+.musicbox .options .open {
+	width: 16px;
+    height: 25px;
+    margin-left:10px;
+    background-position: -150px -28px
+}
+
+.musicbox .options .open:hover {
+    background-position: -149px -2px
+}
+
+.musicbox .options .vol-large {
+	width: 16px;
+    height: 25px;
+    margin-left:10px;
+    background-position: -178px 0px;
+}
+
+.musicbox .options .vol-mute {
+	width: 16px;
+    height: 25px;
+    margin-left:10px;
+    background-position: -87px -81px
+}
+
+.musicbox .vol-slider-box{
+	border:1px solid #cecece;
+	border-bottom:1px solid #fff;
+	background-color:#fff;
+	display: inline-block;
+    height: 50px;
+    width: 15px;
+    top: -58px;
+    left: 4px;
+    position: absolute;
+    font-size: 0;
+}
+
+.musicbox .options .vol-slider {
+    display: inline-block;
+    height: 50px;
+    width: 2px;
+    cursor: pointer;
+    background: #cecece;
+    vertical-align: top;
+    left:7px;
+    top:10px;
+    position: relative;
+    font-size: 0
+}
+.musicbox .options .ui-slider-range {
+    font-size: 0;
+    background: #7ba1f7;
+    height: 2px
+}
+
+.musicbox .options .ui-slider-handle {
+    font-size: 0;
+    width: 8px;
+    height: 8px;
+    left:-3px;
+    position: absolute;
+    background: url(../img/musicbox.png) no-repeat -232px -39px
+}
+
+/*音乐盒CSS3样式代码结束*/
