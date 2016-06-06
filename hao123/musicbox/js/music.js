@@ -133,6 +133,8 @@ __d("widget.musicbox.musicbox", ["common.js.jquery-ui", "widget.musicbox.marquee
             a);
             this.$vol = $(".vol-hook", a);
             this.$volSilder = $(".vol-slider-hook", a);
+            // 播放进度
+            this.$proSilder = $(".pro-slider-hook", a);
             this.player = null ;
             this.playList = {};
             this.playing = !1;
@@ -143,7 +145,8 @@ __d("widget.musicbox.musicbox", ["common.js.jquery-ui", "widget.musicbox.marquee
             this._initPlayer(function() {
                 a._getPlayList(function() {
                     a._initVolume();
-                    a._bindEvent()
+                    a._initProcess();
+                    a._bindEvent();
                 }
                 )
             }
@@ -224,6 +227,39 @@ __d("widget.musicbox.musicbox", ["common.js.jquery-ui", "widget.musicbox.marquee
                 }
             })
         },
+        _initProcess:function(){
+        	var a=this;
+        	
+            // 注册监听播放进度事件
+            a.player.on('timeupdate', timeupdate);
+                
+        	// 通过jquery-ui的slider组件实现播放进度条的交互
+			this.$procSilder.slider({
+				range: 'min',
+				max: 1000,
+				disabled: true,
+				start: function() {
+					// 为了使拖动操作不受打断，进度条拖动操作开始时即暂停对timeupdate事件的监听
+					a.player.off('timeupdate');
+				},
+				stop: function(d, k) {
+					// 拖动结束时再恢复对timeupdate事件的监听
+					a.player.play(k.value *a.player.duration());
+					
+					a.player.on('timeupdate', timeupdate);
+					setTimeout(function(){a.player.on('timeupdate', timeupdate);},200);
+					
+					$(k.handle).blur();
+				}
+			});
+			
+			// 监听事件,调整播放进度
+			function timeupdate(){
+        		var pos = a.player.curPos(),
+                duration = a.player.duration();
+           		this.$procSilder.slider('option', 'value',duration?pos/duration*1000:0);
+			}
+        },
         _initPlayer: function(a) {
             var b = this
               , d = b.options;
@@ -245,6 +281,7 @@ __d("widget.musicbox.musicbox", ["common.js.jquery-ui", "widget.musicbox.marquee
                     absoluteUrl: !1,
                     volume: b.volume
                 });
+                
                 a && a()
             }
             )
