@@ -9,9 +9,81 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * SQL引擎
+ * 
+ * @author 魏国兴
+ *
+ */
 public class SqlEngine {
 
+	// 操作表
 	private FileTable table = null;
+	// 操作SQL
+	private SqlParse sqlParse = null;
+
+	public SqlEngine() {
+	}
+
+	public SqlEngine SQL(String sql) {
+
+		this.sqlParse = new SqlParse(sql);
+
+		// 获取到主表
+		String from = sqlParse.get("from");
+		if (from != null) {
+
+			String name = sqlParse.getTable(from);
+			String input = sqlParse.getPath(from);
+
+			// 从input中解析出format和split
+			this.table = new FileTable(name, null, null, input);
+
+		}
+
+		// 执行join
+		String join = sqlParse.get("join");
+		if (join != null) {
+
+			for (String en : join.split("\\|")) {
+				String table = en.split("on")[0];
+				String on = en.split("on")[1];
+
+				String name = sqlParse.getTable(table);
+				String input = sqlParse.getPath(table);
+
+				this.join(new FileTable(name, null, null, input), on);
+			}
+		}
+
+		// 执行where
+		String where = sqlParse.get("where");
+		if (where != null) {
+			this.where(where);
+		}
+		// 执行group by
+		String group = sqlParse.get("group by");
+		if (group != null) {
+			String select = sqlParse.get("select");
+			this.group(select, group);
+		} else {
+			String select = sqlParse.get("select");
+			this.select(select);
+		}
+
+		// 执行order by
+		String order = sqlParse.get("order by");
+		if (order != null) {
+			this.order(order);
+		}
+		// 执行limit
+		String limit = sqlParse.get("limit");
+		if (limit != null) {
+			this.limit(limit);
+		}
+
+		return this;
+	}
 
 	public SqlEngine(FileTable table) {
 		this.table = table;
@@ -114,7 +186,7 @@ public class SqlEngine {
 		// 用于过滤某一行
 		class RowFilter {
 			// 判断某行知否满足wherecase这个条件
-			public boolean filter(TableFormat format, String row,
+			public boolean filter(FileTable.TableFormat format, String row,
 					String wherecase) {
 
 				if (wherecase.equals("true") || wherecase.equals("false")) {
@@ -130,11 +202,10 @@ public class SqlEngine {
 				String v = format.getColumn(row, col);
 
 				boolean res = false;
-				
-				
-				try{
-					Integer v1=Integer.parseInt(v);
-					Integer val1=Integer.parseInt(val);
+
+				try {
+					Integer v1 = Integer.parseInt(v);
+					Integer val1 = Integer.parseInt(val);
 					if (opt.equals(">=")) {
 						res = v1.compareTo(val1) >= 0;
 					} else if (opt.equals("<=")) {
@@ -150,7 +221,7 @@ public class SqlEngine {
 					} else if (opt.equals("like")) {
 						res = v.matches(val);
 					}
-				}catch(Exception e){
+				} catch (Exception e) {
 					if (opt.equals(">=")) {
 						res = v.compareTo(val) >= 0;
 					} else if (opt.equals("<=")) {
@@ -246,7 +317,6 @@ public class SqlEngine {
 		return this;
 	}
 
-	
 	public SqlEngine limit(String limit) {
 
 		String splits[] = limit.split(",");
@@ -282,10 +352,10 @@ public class SqlEngine {
 					String val1 = table.getFormat().getColumn(row1, col);
 					String val2 = table.getFormat().getColumn(row2, col);
 
-					try{
-						Integer v1=Integer.parseInt(val1);
-						Integer v2=Integer.parseInt(val2);
-						
+					try {
+						Integer v1 = Integer.parseInt(val1);
+						Integer v2 = Integer.parseInt(val2);
+
 						if (v1.compareTo(v2) != 0) {
 							if (type.toLowerCase().equals("asc")) {
 								return v1.compareTo(v2);
@@ -293,7 +363,7 @@ public class SqlEngine {
 								return v2.compareTo(v1);
 							}
 						}
-					}catch(Exception e){
+					} catch (Exception e) {
 						if (val1.compareTo(val2) != 0) {
 							if (type.toLowerCase().equals("asc")) {
 								return val1.compareTo(val2);
@@ -314,10 +384,14 @@ public class SqlEngine {
 
 	public SqlEngine select(String select) {
 
+		String split = this.table.getFormat().getSplit();
+
+		if (select.equals("*")) {
+			select = this.table.getFormat().getFormat().replace(split, ",");
+		}
 		String splits[] = select.split(",");
 
 		List<String> rows = new ArrayList<String>();
-		String split = this.table.getFormat().getSplit();
 		String format = select.replace(",", split);
 		for (String row : table.getRows()) {
 			String newRow = "";
@@ -390,6 +464,10 @@ public class SqlEngine {
 			format = "";
 			// sum(id) as id
 			for (String mtrix : matrix) {
+
+				if (!mtrix.contains("as")) {
+					mtrix += " as matrix_name";
+				}
 				Pattern p = Pattern
 						.compile("(sum|avg|max|min|count)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)");
 				Matcher m = p.matcher(mtrix);
@@ -401,6 +479,9 @@ public class SqlEngine {
 					func = m.group(1);
 					param = m.group(2);
 					alias = m.group(3).trim();
+					if (alias.equals("matrix_name")) {
+						alias = func + "(" + param + ")";
+					}
 				}
 				Double sum = new Double(0);
 				Double count = new Double(0);
@@ -437,7 +518,7 @@ public class SqlEngine {
 				if (func.equals("count")) {
 					aggregate += count.intValue() + split;
 				}
-				format += alias != null ? alias : func + "(" + param + ")";
+				format += alias;
 				format += split;
 			}
 			aggregate = aggregate.substring(0, aggregate.length() - 1);
@@ -482,44 +563,62 @@ public class SqlEngine {
 
 	public static void main(String args[]) {
 
-		FileTable student=null;
-		FileTable teacher=null;
-		
+		// 声明变量
+		String sql = null;
+		SqlEngine sqlEngine = null;
+
+		FileTable student = null;
+		FileTable teacher = null;
+
 		// 简单查询
-		// select name,grade from student where id>10 order by grade desc  limit 0,10;
-		
-		student = new FileTable("id|name|grade|tid", "classpath:student.txt");
-		
-		SqlEngine sql=new SqlEngine(student).where("id>10").order("grade desc").limit("0,10").select("id,name,grade");
-		System.out.println(sql);
-		
-		
+		sql = "select id,name,grade from classpath:student.txt student where id>10 order by grade desc limit 0,10";
+
+		sqlEngine = new SqlEngine().SQL(sql);
+		System.out.println(sqlEngine);
+
+		student = new FileTable("classpath:student.txt");
+		sqlEngine = new SqlEngine(student).where("id>10").order("grade desc")
+				.limit("0,10").select("id,name,grade");
+		System.out.println(sqlEngine);
+
 		// 表连接
-		// select s.id,s.name,s.grade,t.id,t.name from student s join teacher t where s.tid=t.id
-		
-		teacher = new FileTable("t","id|name", "classpath:teacher.txt");
-		student = new FileTable("s","id|name|grade|tid", "classpath:student.txt");
-		
-		sql=new SqlEngine(student).join(teacher, "s.tid=t.id").select("s.id,s.name,s.grade,t.id,t.name");
-		System.out.println(sql);
-		
+		sql = "select s.id,s.name,s.grade,t.id,t.name from classpath:student.txt s join classpath:teacher.txt t on s.tid=t.id limit 0,10";
+
+		sqlEngine = new SqlEngine().SQL(sql);
+		System.out.println(sqlEngine);
+
+		teacher = new FileTable("t", "classpath:teacher.txt");
+		student = new FileTable("s", "classpath:student.txt");
+
+		sqlEngine = new SqlEngine(student).join(teacher, "s.tid=t.id")
+				.select("s.id,s.name,s.grade,t.id,t.name").limit("0,10");
+		System.out.println(sqlEngine);
+
 		// 分组查询
-		// select count(tid) from student group by tid
-		
-		student = new FileTable("s","id|name|grade|tid", "classpath:student.txt");
-		
-		sql=new SqlEngine(student).group("count(tid) as tid", "tid");
-		System.out.println(sql);
-		
+		sql = "select tid,sum(grade) as grade from classpath:student.txt student group by tid limit 0,10";
+
+		sqlEngine = new SqlEngine().SQL(sql);
+		System.out.println(sqlEngine);
+
+		student = new FileTable("s", "classpath:student.txt");
+		sqlEngine = new SqlEngine(student).group("sum(grade) as grade", "tid")
+				.limit("0,10");
+		System.out.println(sqlEngine);
+
 		// 表连接分组查询(查询那个老师对应的学生比较多)
-		
-		// select t.name,count(s.tid) as t.count from student s join teacher t on s.tid=t.id group by s.tid order by t.count desc 
-		teacher = new FileTable("t","id|name", "classpath:teacher.txt");
-		student = new FileTable("s","id|name|grade|tid", "classpath:student.txt");
-		
-		sql=new SqlEngine(student).join(teacher, "s.tid=t.id").select("s.id,s.name,s.grade,t.id,t.name").group("t.name,count(t.id) as t.count", "t.id,t.name").order("t.count desc");
-		System.out.println(sql);
-		
-		
+		sql = "select t.name,count(t.id) as t.count as t.count from classpath:student.txt s join classpath:teacher.txt t on s.tid=t.id group by t.id,t.name order by t.count desc limit 0,10";
+
+		sqlEngine = new SqlEngine().SQL(sql);
+		System.out.println(sqlEngine);
+
+		teacher = new FileTable("t", "classpath:teacher.txt");
+		student = new FileTable("s", "classpath:student.txt");
+
+		sqlEngine = new SqlEngine(student).join(teacher, "s.tid=t.id")
+				.select("s.id,s.name,s.grade,t.id,t.name")
+				.group("t.name,count(t.id) as t.count", "t.id,t.name")
+				.order("t.count desc").limit("0,10");
+		System.out.println(sqlEngine);
+
 	}
 }

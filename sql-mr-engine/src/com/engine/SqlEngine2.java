@@ -32,7 +32,7 @@ public class SqlEngine2 {
 	// 执行SQL
 	public void execute() throws IOException {
 		
-		// Hadoop配置对象
+		/*// Hadoop配置对象
 		Configuration mainConf = new Configuration();
 		
 		// 日志配置对象
@@ -69,7 +69,7 @@ public class SqlEngine2 {
 				HDFSHelper.mergeFiles(mainConf,joinTable.getInput(), tmpFile);
 				mainJob.addCacheFile(new Path(tmpFile).toUri());
 			}
-		}
+		}*/
 		
 	}
 	// 关闭引擎

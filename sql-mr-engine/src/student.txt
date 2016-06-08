@@ -1,3 +1,4 @@
+#format:id|name|grade|tid
 0|student0|90|2
 1|student1|54|9
 2|student2|34|2

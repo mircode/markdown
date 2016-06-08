@@ -25,7 +25,7 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 	 
 	 public void setup(Context context) throws IOException, InterruptedException {
 		 
-		 // 读取配置
+		/* // 读取配置
 		 String sql=context.getConfiguration().get(LogConf.LOG_SQL);
 		 // 构造配置对象和SQL解析器
 		 sqlParse=new SqlParse(sql);
@@ -41,7 +41,7 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 			tableMap.put(fileTable.getName(),fileTable);
 		 }
 		 
-		 super.setup(context);
+		 super.setup(context);*/
 	 }
 	 public void map(Object key,Text value,Context context) throws IOException, InterruptedException {
 		 

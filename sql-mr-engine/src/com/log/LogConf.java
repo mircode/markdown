@@ -32,7 +32,7 @@ public class LogConf {
 
 	public LogConf(String path) throws IOException {
 
-		Properties prop = new Properties();
+		/*Properties prop = new Properties();
 		FileInputStream in = new FileInputStream(path);
 		prop.load(in);
 
@@ -79,7 +79,7 @@ public class LogConf {
 		}
 
 		in.close();
-
+*/
 	}
 	public Map<String, LogTable> getTableMap() {
 		return tableMap;
