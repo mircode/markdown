@@ -1,12 +1,15 @@
 package com.sql;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * SQL解析器
+ * 
  * @author 魏国兴
  * 
  */
@@ -19,6 +22,7 @@ public class SqlParse {
 
 	/**
 	 * 解析SQL
+	 * 
 	 * @param sql
 	 */
 	public SqlParse(String sql) {
@@ -49,6 +53,7 @@ public class SqlParse {
 
 	/**
 	 * 获取SQL中的value
+	 * 
 	 * @param key
 	 * @return
 	 */
@@ -85,6 +90,31 @@ public class SqlParse {
 			return splits[0];
 		}
 	}
-
+	/**
+	 * 返回需要join的表的表名
+	 * 
+	 * @return
+	 */
+	public List<String> getJoinTables(){
+		List<String> joins=new ArrayList<String>();
+		String join = this.get("join");
+		if (join != null) {
+			for (String en : join.split("\\|")) {
+				String table = en.split("on")[0];
+				String name = this.getTable(table);
+				joins.add(name);
+			}
+		}
+		 return joins;
+	}
+	/**
+	 * 返回主表名称
+	 * 
+	 * @return
+	 */
+	public String getMainTable(){
+		String from = this.get("from");
+		return this.getTable(from);
+	}
 
 }

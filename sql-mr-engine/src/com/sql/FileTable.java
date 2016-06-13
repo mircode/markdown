@@ -23,6 +23,8 @@ public class FileTable {
 	private String name;
 	// 输入路径
 	private String input;
+	// 文件系统类型
+	private String type;
 	// 日志格式
 	private TableFormat format;
 	// 表格数据
@@ -54,7 +56,7 @@ public class FileTable {
 		// input: classpath://xxxx.txt
 		// input: hdfs://xxxx.txt
 
-		String type = "file";
+		this.type = "file";
 
 		if (input != null) {
 
@@ -99,7 +101,8 @@ public class FileTable {
 		}
 
 		if (type.equals("hdfs")) {
-
+			String path = this.input;
+			this.rows=this.loadHdfs(path);
 		} else {
 
 			String path = this.input;
@@ -125,6 +128,10 @@ public class FileTable {
 
 	}
 
+	public List<String> loadHdfs(String path) {
+		return null;
+	}
+
 	public FileTable(String name, String split, String format, List<String> rows) {
 		this(name, null, split, format, rows);
 	}
@@ -137,6 +144,16 @@ public class FileTable {
 		this.rows = rows;
 	}
 
+	
+	public String serialize(){
+		return this.name+"$"+this.input+"$"+this.format.getSplit()+"$"+this.format.getFormat();
+	}
+	public void diserialize(String line){
+		String[] splits=line.split("$");
+		this.name=splits[0];
+		this.input=splits[1];
+		this.format = new TableFormat(splits[2], splits[3]);
+	}
 	/**
 	 * 从文件中获取分隔串
 	 * 
@@ -280,8 +297,10 @@ public class FileTable {
 
 	public String toString() {
 		String res = this.format.getFormat() + "\n";
-		for (String row : rows) {
-			res += row + "\n";
+		if(rows!=null){
+			for (String row : rows) {
+				res += row + "\n";
+			}
 		}
 		return res;
 	}

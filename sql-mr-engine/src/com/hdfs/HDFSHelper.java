@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -287,7 +289,39 @@ public class HDFSHelper {
         }
         return fileContent;
     }
-    
+    /**
+     * 读取文件内容
+     *
+     * @param conf
+     * @param filePath
+     * @return
+     * @throws IOException
+     */
+    public static List<String> readLines(Configuration conf, String filePath) throws IOException {
+    	
+    	List<String> lines = new ArrayList<String>();
+        FileSystem fs = FileSystem.get(conf);
+        Path path = new Path(filePath);
+        
+        BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new InputStreamReader(fs.open(path)));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				lines.add(line);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException("Error loading table in memory: " + path, e);
+		} finally {
+			try {
+				if (reader != null) {
+					reader.close();
+				}
+			} catch (IOException e) {
+			}
+		}
+       return lines;
+    }
     public static void main(String args[]) throws IOException {
     	
         Configuration conf = new Configuration();

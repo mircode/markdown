@@ -22,8 +22,8 @@ public class SqlEngine {
 	// ²Ù×÷SQL
 	private SqlParse sqlParse = null;
 
-	public SqlEngine() {
-	}
+	public SqlEngine() {}
+	
 
 	public SqlEngine SQL(String sql) {
 
@@ -560,6 +560,26 @@ public class SqlEngine {
 	public String toString() {
 		return this.table.toString();
 	}
+
+	public FileTable getTable() {
+		return table;
+	}
+
+
+	public void setTable(FileTable table) {
+		this.table = table;
+	}
+
+
+	public SqlParse getSqlParse() {
+		return sqlParse;
+	}
+
+
+	public void setSqlParse(SqlParse sqlParse) {
+		this.sqlParse = sqlParse;
+	}
+
 
 	public static void main(String args[]) {
 

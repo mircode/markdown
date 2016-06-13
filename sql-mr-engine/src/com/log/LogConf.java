@@ -1,13 +1,13 @@
 package com.log;
 
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import com.sql.SqlParse;
+import com.sql.FileTable;
 
 /**
  * 用于读取配置文件
@@ -18,82 +18,56 @@ import com.sql.SqlParse;
 public class LogConf {
 
 	// 配置文件的属性
+	public static final String LOG_SQL="log.sql";
 	public static final String LOG_SPLIT="log.split";
 	public static final String LOG_FORMAT="log.format";
-	public static final String LOG_SQL="log.sql";
+	
+	// SQL语句
+	private String sql=null;
 	
 	// 日志表映射
-	private Map<String,LogTable> tableMap=new HashMap<String,LogTable>();
-	
-	// 系统分隔符
-	private String split="|";// 默认为|
-	// 日志分析的sql
-	private String sql;
-
-	public LogConf(String path) throws IOException {
-
-		/*Properties prop = new Properties();
-		FileInputStream in = new FileInputStream(path);
-		prop.load(in);
-
-		this.sql = prop.getProperty(LogConf.LOG_SQL);
-		this.split = prop.getProperty(LogConf.LOG_SPLIT,this.split);
+	private Map<String,FileTable> tables=new HashMap<String,FileTable>();
 		
-		// 尝试从sql中解析相关信息
-    	SqlParse sqlParse=new SqlParse(this.sql);
-    	
-		Iterator<Map.Entry<Object,Object>> it=prop.entrySet().iterator();
-		while(it.hasNext()){
-		    Map.Entry<Object,Object> entry=it.next();
-		    String key = entry.getKey().toString();
-		    String value = entry.getValue().toString();
-		    if(key.indexOf(LogConf.LOG_FORMAT)>-1){
-		    	
-		    	String name=key.substring(LogConf.LOG_FORMAT.length());
-		    	String input=null;
-		    	String format=null;
-		    	String split=null;
-		    	
-		    	
-		    	if(name==null||name.equals("")){
-			    	name=sqlParse.getMainTable();
-		    	}
-		    	
-		    	// 尝试从log.format中解析出 input format split
-		    	String[] splits=value.split(":");
-		    	if(splits.length==1){
-		    		input=sqlParse.getTables().get(name);
-		    		format=splits[0];
-		    		split=this.split;
-		    	}else if(splits.length==2){
-		    		input=splits[0];
-		    		format=splits[1];
-		    		split=this.split;
-		    	}else if(splits.length==3){
-		    		input=splits[0];
-		    		format=splits[1];
-		    		split=splits[2];
-				}
-		    	this.tableMap.put(name, new LogTable(name,input,split,format));
-		    }
+	
+	public LogConf(String path) {
+
+		try{
+			Properties prop = new Properties();
+			FileInputStream in = new FileInputStream(path);
+			prop.load(in);
+	
+			this.sql = prop.getProperty(LogConf.LOG_SQL);
+			
+			String split = prop.getProperty(LogConf.LOG_SPLIT);
+	    	
+			Iterator<Map.Entry<Object,Object>> it=prop.entrySet().iterator();
+			
+			while(it.hasNext()){
+				
+			    Map.Entry<Object,Object> entry=it.next();
+			    String key = entry.getKey().toString();
+			    String value = entry.getValue().toString();
+			    
+			    if(key.contains(LogConf.LOG_FORMAT)){
+			    	
+			    	String name=key.substring(LogConf.LOG_FORMAT.length()+1);
+			    	String input=null;
+			    	String format=null;
+			    	
+			    	int index=value.lastIndexOf(":");
+			    	input=value.substring(0,index);
+			    	format=value.substring(index+1);
+			    			
+			    	this.tables.put(name, new FileTable(name,split,format,input,true));
+			    }
+			}
+	
+			in.close();
+		}catch(Exception e){
+			e.printStackTrace();
 		}
-
-		in.close();
-*/
 	}
-	public Map<String, LogTable> getTableMap() {
-		return tableMap;
-	}
-	public void setTableMap(Map<String, LogTable> tableMap) {
-		this.tableMap = tableMap;
-	}
-	public String getSplit() {
-		return split;
-	}
-
-	public void setSplit(String split) {
-		this.split = split;
-	}
+	
 	public String getSql() {
 		return sql;
 	}
@@ -101,5 +75,28 @@ public class LogConf {
 	public void setSql(String sql) {
 		this.sql = sql;
 	}
+
+	public Map<String, FileTable> getTables() {
+		return tables;
+	}
+
+	public void setTables(Map<String, FileTable> tables) {
+		this.tables = tables;
+	}
+
+	public static void main(String args[]) throws Exception{
+		
+		
+		String path=LogConf.class.getClassLoader().getResource("log.conf").getPath();
+		path = URLDecoder.decode(path, "UTF-8");
+		LogConf log=new LogConf(path);
+		
+		
+		System.out.println(log.getSql());
+		System.out.println(log.getTables());
+		
+		
+	}
+	
 	
 }
