@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import com.file.Table;
 import com.hdfs.HDFSHelper;
 import com.log.LogConf;
+import com.mr.SqlCombiner;
 import com.mr.SqlMapper;
 import com.mr.SqlReducer;
 import com.sql.SqlEngine;
@@ -87,7 +88,8 @@ public class SqlMrEngine {
 		
 		mainJob.setMapperClass(SqlMapper.class);
 		mainJob.setReducerClass(SqlReducer.class);
-
+		mainJob.setCombinerClass(SqlCombiner.class);
+		
 		mainJob.setMapOutputKeyClass(Text.class);
 		mainJob.setMapOutputValueClass(Text.class);
 		

@@ -425,8 +425,10 @@ public class SqlEngine {
 
 		return this;
 	}
-
 	public SqlEngine group(String matrix, String group) {
+		return this.group(matrix, group,null);
+	}
+	public SqlEngine group(String matrix, String group,String sp) {
 
 		// table·Ö¸ô·û
 		String split = this.table.getSplit();
@@ -477,7 +479,11 @@ public class SqlEngine {
 					aggregate += this.sum(field, values) + split;
 				}
 				if (func.equals("avg")) {
-					aggregate += this.avg(field, values) + split;
+					if(sp!=null){
+						aggregate += this.sum(field, values)+sp+this.count(field,values) + split;
+					}else{
+						aggregate += this.avg(field, values) + split;
+					}
 				}
 				if (func.equals("max")) {
 					aggregate += this.max(field, values) + split;
@@ -486,7 +492,11 @@ public class SqlEngine {
 					aggregate += this.min(field, values) + split;
 				}
 				if (func.equals("count")) {
-					aggregate += this.count(field, values) + split;
+					if(sp!=null){
+						aggregate += sp+this.count(field, values) + split;
+					}else{
+						aggregate += this.count(field, values) + split;
+					}
 				}
 
 			}
@@ -536,7 +546,16 @@ public class SqlEngine {
 	}
 
 	public String count(String field, List<String> rows) {
-		Integer count = rows.size();
+		Integer count = 0;
+		for(String row:rows){
+			String col=this.table.getColumns(row, field);
+			
+			if(col.startsWith("#")){
+				count+=Integer.parseInt(col.substring(1));
+			}else{
+				count+=1;
+			}
+		}
 		return count.toString();
 	}
 
@@ -588,10 +607,21 @@ public class SqlEngine {
 		Double avg = new Double(0);
 
 		for (String row : rows) {
-			Double value = Double.parseDouble(this.table.getColumns(
-					row, field));
-			sum += value;
-			count++;
+			
+			String col=this.table.getColumns(row, field);
+					
+			if(col.contains("#")){
+				
+				String v1=col.split("#")[0];
+				String v2=col.split("#")[1];
+				
+				sum+=Double.parseDouble(v1);
+				count+=Double.parseDouble(v2);
+			}else{
+				Double value = Double.parseDouble(col);
+				sum += value;
+				count++;
+			}
 
 		}
 		avg = sum / count;

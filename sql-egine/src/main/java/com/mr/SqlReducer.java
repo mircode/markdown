@@ -25,15 +25,15 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 	
 
 	public void setup(Context context) throws IOException, InterruptedException {
-
+		// sql
+		String sql=context.getConfiguration().get(LogConf.LOG_SQL);
+		sqlParse=new SqlParse(sql);
 	
 	}
 
 	public void reduce(Text key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
-		 // sql
-		 String sql=context.getConfiguration().get(LogConf.LOG_SQL);
-		 sqlParse=new SqlParse(sql);
+		 
 		 
 		 String ser=null;
 		 // main表
@@ -44,21 +44,22 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 		 }
 		 this.table=new Table().diserialize(ser);
 
+		table.setFormat("t.id|t.name|t.count");
 		table.setRows(getRows(values));
 		SqlEngine sqlEngine = new SqlEngine(table);
 		
-		
+		System.out.println(table);
 		// 执行聚合操作
 		String matrix = sqlParse.get("matrix");
 		String group=sqlParse.get("group by");
 		if(matrix!=null){
-			sqlEngine.group(matrix,group);
+			sqlEngine.group("count(t.count)",group);
 		}
 		
 		// 执行过滤
 		String select = sqlParse.get("select");
 		if(select!=null){
-			sqlEngine.select(select);
+			sqlEngine.select("t.name,count(t.count)");
 		}
 		
 		for(String row:sqlEngine.getTable().getRows()){
