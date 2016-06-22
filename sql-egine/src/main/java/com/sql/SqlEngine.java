@@ -443,6 +443,7 @@ public class SqlEngine {
 			// mapper
 			for (String row : this.table.getRows()) {
 	
+				
 				String key = table.getColumns(row, group);
 	
 				List<String> rows = context.get(key);

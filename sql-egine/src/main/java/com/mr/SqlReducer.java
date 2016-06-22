@@ -44,22 +44,46 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 		 }
 		 this.table=new Table().diserialize(ser);
 
-		table.setFormat("t.id|t.name|t.count");
+		 String split=this.table.getSplit();
+		 // 更具matrix和group计算新的table格式 
+		 String matrix = sqlParse.get("matrix");
+		 String group=sqlParse.get("group by");
+		 
+		 String format="";
+		 String[] matrixs = matrix.split(",");
+		 for (String mtrix : matrixs) {
+
+			String func = SqlParse.getMetrix(mtrix, "func");
+			String field = SqlParse.getMetrix(mtrix, "field");
+			String alias = SqlParse.getMetrix(mtrix, "alias");
+			
+			format+=func.substring(0,1)+"#"+field+split;
+		 }
+		 
+		 if(group!=null){
+				format = group.replace(",", split) + split + format.substring(0,format.length()-1);
+		 }
+		 
+		table.setFormat(format);
 		table.setRows(getRows(values));
 		SqlEngine sqlEngine = new SqlEngine(table);
 		
-		System.out.println(table);
+		matrix=matrix.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1$2($1#$3) as $4");
 		// 执行聚合操作
-		String matrix = sqlParse.get("matrix");
-		String group=sqlParse.get("group by");
+		//String matrix = sqlParse.get("matrix");
+		//String group=sqlParse.get("group by");
 		if(matrix!=null){
-			sqlEngine.group("count(t.count)",group);
+			sqlEngine.group(matrix,group);
 		}
 		
 		// 执行过滤
 		String select = sqlParse.get("select");
+		
+		select=select.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1$2($1#$3) as $4");
+				
+		
 		if(select!=null){
-			sqlEngine.select("t.name,count(t.count)");
+			sqlEngine.select(select);
 		}
 		
 		for(String row:sqlEngine.getTable().getRows()){
@@ -74,5 +98,7 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 		}
 		return rows;
 	}
+	
+	
 
 }
