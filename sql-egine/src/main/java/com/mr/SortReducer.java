@@ -9,27 +9,35 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import com.file.Table;
-import com.log.LogConf;
+import com.log.SqlEngineConf;
 import com.sql.SqlEngine;
 import com.sql.SqlParse;
 
 /**
- * 执行SQL的Mapper函数
+ * 排序Reducer
  * 
  * @author 魏国兴
  */
 public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 
-	// main主表
-	private Table table = null;
 	// SQL解析器
 	private SqlParse sqlParse = null;
 
-	public void setup(Context context) throws IOException, InterruptedException {
+	// 反序列化生成table
+	private String serialize = null;
 
+	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(LogConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlEngineConf.LOG_SQL);
 		sqlParse = new SqlParse(sql);
+
+		// main表
+		if (sqlParse.get("join") != null) {
+			serialize = context.getConfiguration()
+					.get(SqlEngineConf.JOIN_TABLE);
+		} else {
+			serialize = context.getConfiguration().get(sqlParse.get("#main_table"));
+		}
 
 		super.setup(context);
 	}
@@ -37,23 +45,8 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 	public void reduce(Text key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
 
-		String ser = null;
-		// main表
-		if (sqlParse.get("join") != null) {
-			ser = context.getConfiguration().get("join_table_format");
-		} else {
-			ser = context.getConfiguration().get(sqlParse.getMainTable());
-		}
-		this.table = new Table().diserialize(ser);
-
-		String select = sqlParse.get("select");
-
-		select = select.replaceAll(
-				"(sum|avg|max|min|count)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)",
-				"$3");
-
-		table.setFormat(select.replace(",", this.table.getSplit()));
-		table.setRows(getRows(values));
+		// 初始化表
+		Table table = initTable(values);
 
 		// 构建SQL引擎
 		SqlEngine sqlEngine = new SqlEngine(table);
@@ -72,9 +65,8 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		if (limit != null) {
 			sqlEngine.limit(limit);
 		}
-		for (String row : sqlEngine.getTable().getRows()) {
-			context.write(NullWritable.get(), new Text(row));
-		}
+
+		writeTable(context, sqlEngine.getTable());
 	}
 
 	private List<String> getRows(Iterable<Text> values) {
@@ -85,4 +77,36 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		return rows;
 	}
 
+	/**
+	 * 将Reduce中的values转化成Table
+	 * 
+	 * @param values
+	 * @return
+	 */
+	private Table initTable(Iterable<Text> values) {
+
+		// 反序列化生成table
+		Table table = new Table().diserialize(serialize);
+		// 分隔符
+		String split = table.getSplit();
+		table = new Table().diserialize(serialize);
+		String format = sqlParse.get("#sort_format");
+		table.setFormat(format.replace(",", split));
+		table.setRows(getRows(values));
+
+		return table;
+	}
+
+	/**
+	 * 将表格的内容写入到HDFS中
+	 * 
+	 * @param context
+	 * @param table
+	 */
+	private void writeTable(Context context, Table table) throws IOException,
+			InterruptedException {
+		for (String row : table.getRows()) {
+			context.write(NullWritable.get(), new Text(row));
+		}
+	}
 }

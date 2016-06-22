@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import com.file.HDFSTable;
 import com.file.Table;
-import com.log.LogConf;
+import com.log.SqlEngineConf;
 import com.sql.SqlEngine;
 import com.sql.SqlParse;
 
@@ -30,11 +30,11 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 	 public void setup(Context context) throws IOException, InterruptedException {
 		 
 		 // sql∂‘œÛ
-		 String sql=context.getConfiguration().get(LogConf.LOG_SQL);
+		 String sql=context.getConfiguration().get(SqlEngineConf.LOG_SQL);
 		 sqlParse=new SqlParse(sql);
 		 
 		 // main±Ì
-		 String json=context.getConfiguration().get(sqlParse.getMainTable());
+		 String json=context.getConfiguration().get(sqlParse.get("#main_table"));
 		 this.table=new Table().diserialize(json);
 		 
 		
@@ -81,7 +81,5 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 		}
 		
 	 }
-	
-	 
 	 
 }

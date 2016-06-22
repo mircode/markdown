@@ -428,6 +428,9 @@ public class SqlEngine {
 	public SqlEngine group(String matrix, String group) {
 		return this.group(matrix, group,null);
 	}
+	public SqlEngine combine(String matrix, String group) {
+		return this.group(matrix, group,"#");
+	}
 	public SqlEngine group(String matrix, String group,String sp) {
 
 		// table·Ö¸ô·û

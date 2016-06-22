@@ -51,7 +51,8 @@ public class SqlParse {
 		}
 		
 		// 拆分select语句
-		String[] splits = SQL.get("select").split(",");
+		String select=SQL.get("select");
+		String[] splits = select.split(",");
 		
 		String matrix="";
 		String distinct=null;
@@ -74,6 +75,20 @@ public class SqlParse {
 		
 		SQL.put("matrix",matrix);
 		SQL.put("distinct",distinct);
+		
+		
+		
+		// 主表和join表
+		SQL.put("#main_table",this.getMainTable());
+		
+		// 用于MapReduce中
+		SQL.put("#reduce_format",matrix.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1#$3"));
+		SQL.put("#matrix",matrix.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1$2($1#$3) as $4"));
+		SQL.put("#select",select.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1$2($1#$3) as $4"));
+		SQL.put("#sort_format",select.replaceAll("(sum|avg|max|min|count)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$3"));
+		
+		
+		
 		
 	}
 	/**
@@ -172,9 +187,10 @@ public class SqlParse {
 	 * 
 	 * @return
 	 */
-	public String getMainTable(){
+	private String getMainTable(){
 		String from = this.get("from");
 		return this.getTable(from);
 	}
 
+	
 }
