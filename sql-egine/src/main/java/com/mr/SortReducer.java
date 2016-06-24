@@ -8,9 +8,9 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import com.conf.SqlConf;
 import com.file.Table;
-import com.log.SqlEngineConf;
-import com.sql.SqlEngine;
+import com.sql.SqlExeEngine;
 import com.sql.SqlParse;
 
 /**
@@ -28,15 +28,15 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 
 	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(SqlEngineConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlConf.LOG_SQL);
 		sqlParse = new SqlParse(sql);
 
 		// main表
 		if (sqlParse.get("join") != null) {
 			serialize = context.getConfiguration()
-					.get(SqlEngineConf.JOIN_TABLE);
+					.get(SqlConf.JOIN_TABLE);
 		} else {
-			serialize = context.getConfiguration().get(sqlParse.get("#main_table"));
+			serialize = context.getConfiguration().get(sqlParse.get("#table.main"));
 		}
 
 		super.setup(context);
@@ -49,7 +49,7 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		Table table = initTable(values);
 
 		// 构建SQL引擎
-		SqlEngine sqlEngine = new SqlEngine(table);
+		SqlExeEngine sqlEngine = new SqlExeEngine(table);
 
 		String distinct = sqlParse.get("distinct");
 		if (distinct != null) {
@@ -90,7 +90,7 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		// 分隔符
 		String split = table.getSplit();
 		table = new Table().diserialize(serialize);
-		String format = sqlParse.get("#sort_format");
+		String format = sqlParse.get("#mr.sort.format");
 		table.setFormat(format.replace(",", split));
 		table.setRows(getRows(values));
 

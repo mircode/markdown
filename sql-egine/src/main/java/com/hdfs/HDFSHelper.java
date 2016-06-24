@@ -289,6 +289,10 @@ public class HDFSHelper {
         }
         return fileContent;
     }
+    
+    public static List<String> readLines(Configuration conf, String filePath) throws IOException {
+    	return HDFSHelper.readLines(conf, filePath, null);
+    }
     /**
      * 读取文件内容
      *
@@ -297,7 +301,7 @@ public class HDFSHelper {
      * @return
      * @throws IOException
      */
-    public static List<String> readLines(Configuration conf, String filePath) throws IOException {
+    public static List<String> readLines(Configuration conf, String filePath,Integer num) throws IOException {
     	
     	List<String> lines = new ArrayList<String>();
         FileSystem fs = FileSystem.get(conf);
@@ -307,8 +311,13 @@ public class HDFSHelper {
 		try {
 			reader = new BufferedReader(new InputStreamReader(fs.open(path)));
 			String line;
+			Integer counter=0;
 			while ((line = reader.readLine()) != null) {
 				lines.add(line);
+				counter++;
+				if(num!=null&&counter>=num){
+					break;
+				}
 			}
 		} catch (IOException e) {
 			throw new RuntimeException("Error loading table in memory: " + path, e);

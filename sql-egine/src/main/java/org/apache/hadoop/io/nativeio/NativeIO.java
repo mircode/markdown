@@ -730,7 +730,8 @@ public class NativeIO {
   public static FileInputStream getShareDeleteFileInputStream(File f, long seekOffset)
       throws IOException {
     if (!Shell.WINDOWS) {
-      RandomAccessFile rf = new RandomAccessFile(f, "r");
+     @SuppressWarnings("resource")
+	RandomAccessFile rf = new RandomAccessFile(f, "r");
       if (seekOffset > 0) {
         rf.seek(seekOffset);
       }

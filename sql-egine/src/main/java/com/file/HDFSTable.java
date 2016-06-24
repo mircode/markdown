@@ -21,7 +21,7 @@ public class HDFSTable extends Table{
 		this.format=table.getFormat();
 		this.input=table.getInput();
 		try {
-			this.rows=HDFSHelper.readLines(conf, this.input);
+			super.setRows(HDFSHelper.readLines(conf, this.input));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

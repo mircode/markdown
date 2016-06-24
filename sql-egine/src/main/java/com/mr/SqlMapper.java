@@ -2,16 +2,15 @@ package com.mr;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
+import com.conf.SqlConf;
 import com.file.HDFSTable;
 import com.file.Table;
-import com.log.SqlEngineConf;
-import com.sql.SqlEngine;
+import com.sql.SqlExeEngine;
 import com.sql.SqlParse;
 
 /**
@@ -27,32 +26,43 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 	 // SQL解析器
 	 private SqlParse sqlParse=null;
 	 
+	 // 需要过滤行的正则表达试
+	 private String regex=null;
+	 
 	 public void setup(Context context) throws IOException, InterruptedException {
 		 
 		 // sql对象
-		 String sql=context.getConfiguration().get(SqlEngineConf.LOG_SQL);
+		 String sql=context.getConfiguration().get(SqlConf.LOG_SQL);
 		 sqlParse=new SqlParse(sql);
 		 
 		 // main表
-		 String json=context.getConfiguration().get(sqlParse.get("#main_table"));
+		 String json=context.getConfiguration().get(sqlParse.get("#table.main"));
 		 this.table=new Table().diserialize(json);
 		 
 		
 		 // join表
-		 List<String> joins=sqlParse.getJoinTables();
-		 for(String t : joins){
-			json=context.getConfiguration().get(t);
-			Table join=new HDFSTable(context.getConfiguration(), new Table().diserialize(json));
-			this.joins.put(join.getName(),join);
+		 String join = sqlParse.get("join");
+		  if (join != null) {
+			 String joins[]=sqlParse.get("#table.join").split(",");
+			 for(String t : joins){
+				json=context.getConfiguration().get(t);
+				Table table=new HDFSTable(context.getConfiguration(), new Table().diserialize(json));
+				this.joins.put(table.getName(),table);
+			 }
 		 }
-    	
+		 this.regex=context.getConfiguration().get("#regex");
 		 super.setup(context);
 	 }
 	
 	 public void map(Object key,Text value,Context context) throws IOException, InterruptedException {
 		
+		// 过滤不必要的行
+		if(regex!=null&&!value.toString().matches(regex)) return;
+		table.setRow(value.toString());
+		if(table.getRows()==null||table.getRows().size()==0) return;
+		
 		// 构建SQL引擎
-		SqlEngine sqlEngine=new SqlEngine(table.addRow(value.toString()));
+		SqlExeEngine sqlEngine=new SqlExeEngine(table);
 		
 		// 连接Join表
 		String join = sqlParse.get("join");
@@ -60,7 +70,7 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 			for (String en : join.split("\\|")) {
 				String table = en.split("on")[0];
 				String on = en.split("on")[1];
-				String name = sqlParse.getTable(table);
+				String name = SqlParse.getTable(table);
 				sqlEngine.join(joins.get(name), on);
 			}
 		}

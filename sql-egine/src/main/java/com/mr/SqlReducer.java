@@ -8,9 +8,9 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import com.conf.SqlConf;
 import com.file.Table;
-import com.log.SqlEngineConf;
-import com.sql.SqlEngine;
+import com.sql.SqlExeEngine;
 import com.sql.SqlParse;
 
 /**
@@ -28,15 +28,15 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 
 	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(SqlEngineConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlConf.LOG_SQL);
 		sqlParse = new SqlParse(sql);
 
 		// main表
 		if (sqlParse.get("join") != null) {
 			serialize = context.getConfiguration()
-					.get(SqlEngineConf.JOIN_TABLE);
+					.get(SqlConf.JOIN_TABLE);
 		} else {
-			serialize = context.getConfiguration().get(sqlParse.get("#main_table"));
+			serialize = context.getConfiguration().get(sqlParse.get("#table.main"));
 		}
 	}
 
@@ -47,16 +47,16 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 		Table table = initTable(values);
 
 		// 构建SQL引擎
-		SqlEngine sqlEngine = new SqlEngine(table);
+		SqlExeEngine sqlEngine = new SqlExeEngine(table);
 
 		// 执行聚合操作
-		String matrix = sqlParse.get("#matrix");
+		String matrix = sqlParse.get("#mr.matrix");
 		String group = sqlParse.get("group by");
 		if (matrix != null) {
 			sqlEngine.group(matrix, group);
 		}
 		// 执行过滤
-		String select = sqlParse.get("#select");
+		String select = sqlParse.get("#mr.select");
 		if (select != null) {
 			sqlEngine.select(select);
 		}
@@ -82,11 +82,13 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 		// 目标格式：t.id|t.name|c#t.id
 		// 更具matrix和group计算新的table格式
 		String group = sqlParse.get("group by");
-		String format = group.replace(",", split) + split
-				+ sqlParse.get("#reduce_format").replace(",", split);
-
+		String format =sqlParse.get("#mr.reduce.format").replace(",", split);
+		if(group!=null){
+			 format = group.replace(",", split) + split
+					+ sqlParse.get("#mr.reduce.format").replace(",", split);
+		}
 		table.setFormat(format);
-
+		
 		List<String> rows = new ArrayList<String>();
 		for (Text t : values) {
 			rows.add(t.toString());

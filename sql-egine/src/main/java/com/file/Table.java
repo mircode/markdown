@@ -5,6 +5,8 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.type.TypeFactory;
@@ -25,42 +27,30 @@ public class Table {
 	protected String split;
 	// 日志格式
 	protected String format;
-
+	// 行元素应该符合的正则表达式
+	protected String filter;
 	// 表格数据
 	protected List<String> rows=new ArrayList<String>();
 
 	public Table(){
 		
 	}
-	public Table(String name,String input,String split,String format){
-		this(name,input,split,format,null);
+	
+	public Table(String name,String input,String split,String format,String filter){
+		this(name,input,split,format,filter,null);
 	}
-	public Table(String name,String input,String split,String format,List<String> rows){
+	public Table(String name,String input,String split,String format,String filter,List<String> rows){
 		this.name=name;
 		this.input=input;
 		this.split=split;
 		this.format=format;
+		this.filter=filter;
 		if(rows!=null)
-			this.rows=rows;
+			this.setRows(rows);
 	}
 	
 
-	/**
-	 * 添加一行数据
-	 * @param row
-	 */
-	public Table addRow(String row){
-		this.rows.add(row);
-		return this;
-	}
-	/**
-	 * 添加多行数据
-	 * @param row
-	 */
-	public Table addRows(List<String> rows){
-		this.rows.addAll(rows);
-		return this;
-	}
+
 	/**
 	 * 根据index返回line中对应的值
 	 * 
@@ -73,6 +63,7 @@ public class Table {
 		return splits[index];
 	}
 
+	
 	
 	/**
 	 * 返回col中的多个列
@@ -89,7 +80,7 @@ public class Table {
 		}else{
 			String splits[]=cols.split(",");
 			for (String col : splits) {
-				row += this.getColumn(line, col)+split;
+				row += this.getColumn(line, col,String.class)+split;
 			}
 			row = row.substring(0, row.length() - 1);
 		}
@@ -111,7 +102,8 @@ public class Table {
 	 * @param col
 	 * @return
 	 */
-	private String getColumn(String line, String col) {
+	@SuppressWarnings("unchecked")
+	public <T> T getColumn(String line,String col,Class<T> type){
 		String[] splits = format.split(getRgxSplit());
 		int index = Arrays.asList(splits).indexOf(col);
 		if(index<0){
@@ -121,7 +113,24 @@ public class Table {
 				index = Arrays.asList(splits).indexOf(name+"."+col);
 			}
 		}
-		return this.getColumn(line, index);
+		String val=this.getColumn(line, index);
+		
+		String name=type.getSimpleName();
+		
+		Object res=null;
+		if(name.toLowerCase().contains("double")){
+			res=Double.parseDouble(val);
+		}else if(name.toLowerCase().contains("float")){
+			res=Float.parseFloat(val);
+		}else if(name.toLowerCase().contains("integer")){
+			res=Integer.parseInt(val);
+		}else if(name.toLowerCase().contains("boolean")){
+			res=Integer.parseInt(val);
+		}else{
+			res=val;
+		}
+		return (T)res;
+		
 	}
 	/**
 	 * 返回分隔符的正则表达式形式
@@ -202,13 +211,89 @@ public class Table {
 		this.format = format;
 		return this;
 	}
+	public String getFilter() {
+		return filter;
+	}
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+	
 	public List<String> getRows() {
 		return rows;
 	}
+	
+	
 	public Table setRows(List<String> rows) {
-		this.rows = rows;
+		this.rows = this.filterRows(rows,this.filter);
+		return this;
+	}
+	public Table setRow(String row) {
+		List<String> rows=new ArrayList<String>();
+		rows.add(row);
+		this.setRows(rows);
+		return this;
+	}
+	/**
+	 * 添加一行数据
+	 * @param row
+	 */
+	public Table addRow(String r){
+		String row=this.filterRow(r,this.filter);
+		if(row!=null) this.rows.add(row);
+		return this;
+	}
+	/**
+	 * 添加多行数据
+	 * @param row
+	 */
+	public Table addRows(List<String> rows){
+		this.rows.addAll(this.filterRows(rows,this.filter));
 		return this;
 	}
 
+	private List<String> filterRows(List<String> rs,String filter){
+		List<String> rows=new ArrayList<String>();
+		if(filter!=null&&rs!=null){
+			for(String r:rs){
+				String nw=this.filterRow(r, filter);
+				if(nw!=null) rows.add(nw);
+			}
+			return rows;
+		}
+		return rs;
+	}
+	private String filterRow(String r,String filter){
+		if(filter!=null){
+			// 拆分SQL
+			Pattern p = Pattern.compile(filter);
+			Matcher m = p.matcher(r);
+			String row="";
+			
+			// 将正则匹配的结果存放到Map中
+			while (m.find()) {
+				int count=m.groupCount();
+				if(!m.group().equals("")){
+					for(int i=1;i<=count;i++){
+						String n=m.group(i);
+						if(n.endsWith(split)){
+							row+=n;
+						}else{
+							row+=n+split;
+						}
+					}
+				}
+			}
+			if(!row.equals("")){
+				if(row.endsWith(split)){
+					row=row.substring(0,row.length()-1);
+				}
+			}else{
+				row=null;
+			}
+			return row;
+		}
+		return r;
+	}
+	
 	
 }

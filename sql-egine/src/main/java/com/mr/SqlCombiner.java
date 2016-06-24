@@ -7,9 +7,9 @@ import java.util.List;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import com.conf.SqlConf;
 import com.file.Table;
-import com.log.SqlEngineConf;
-import com.sql.SqlEngine;
+import com.sql.SqlExeEngine;
 import com.sql.SqlParse;
 
 /**
@@ -27,15 +27,15 @@ public class SqlCombiner extends Reducer<Text, Text, Text, Text> {
 
 	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(SqlEngineConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlConf.LOG_SQL);
 		sqlParse = new SqlParse(sql);
 
 		// main表
 		if (sqlParse.get("join") != null) {
 			serialize = context.getConfiguration()
-					.get(SqlEngineConf.JOIN_TABLE);
+					.get(SqlConf.JOIN_TABLE);
 		} else {
-			serialize = context.getConfiguration().get(sqlParse.get("#main_table"));
+			serialize = context.getConfiguration().get(sqlParse.get("#table.main"));
 		}
 	}
 
@@ -44,10 +44,9 @@ public class SqlCombiner extends Reducer<Text, Text, Text, Text> {
 
 		// 初始化表
 		Table table = initTable(values);
-
+		
 		// 构建SQL引擎
-		SqlEngine sqlEngine = new SqlEngine(table);
-
+		SqlExeEngine sqlEngine = new SqlExeEngine(table);
 		// 执行聚合操作
 		String matrix = sqlParse.get("matrix");
 		String group = sqlParse.get("group by");
@@ -55,6 +54,7 @@ public class SqlCombiner extends Reducer<Text, Text, Text, Text> {
 			sqlEngine.combine(matrix, group);
 		}
 
+		
 		// 将table中的内容写入到hdfs中
 		this.writeTable(key, context, sqlEngine.getTable());
 	}

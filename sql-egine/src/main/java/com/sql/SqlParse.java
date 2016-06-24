@@ -1,8 +1,6 @@
 package com.sql;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,14 +28,14 @@ public class SqlParse {
 		// 格式化SQL
 		sql = sql
 				.trim()
-				.replaceAll("\\s*(select|from|join|where|group by|order by|limit)\\s+","}$0{")
+				.replaceAll("\\s*(create|select|from|join|where|group by|order by|limit)\\s+","}$0{")
 				.substring(1)
 				.concat("}")
 				.replaceAll("\\s*(,|>|<|=|!=|>=|<=|like)\\s*", "$1");
 
 		// 拆分SQL
 		Pattern p = Pattern
-				.compile("(select|from|join|where|group by|order by|limit)\\s+\\{(.*?)\\}");
+				.compile("(create|select|from|join|where|group by|order by|limit)\\s+\\{(.*?)\\}");
 		Matcher m = p.matcher(sql);
 
 		// 将正则匹配的结果存放到Map中
@@ -76,20 +74,67 @@ public class SqlParse {
 		SQL.put("matrix",matrix);
 		SQL.put("distinct",distinct);
 		
+		// 格式化where语句
+		String where=SQL.get("where");
+		if(where!=null){
+			where = where.replace("&&", "and").replace("||", "or")
+					.replaceAll("\\(|\\)", " $0 ");
+	
+			String[] compare = { ">=", "<=", "=", "!=", "<", ">", "like" };
+			for (int i = 0; i < compare.length; i++) {
+				where = where.replaceAll("\\s*" + compare[i] + "\\s*", compare[i]);
+			}
+			SQL.put("where",where);
+		}
+		
+		
+		
 		
 		
 		// 主表和join表
-		SQL.put("#main_table",this.getMainTable());
+		SQL.put("#table.main",this.getMainTable());
+		SQL.put("#table.join",this.getJoinTables());
+		SQL.put("#outpath", this.getOutPath());
+		
 		
 		// 用于MapReduce中
-		SQL.put("#reduce_format",matrix.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1#$3"));
-		SQL.put("#matrix",matrix.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1$2($1#$3) as $4"));
-		SQL.put("#select",select.replaceAll("([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$1$2($1#$3) as $4"));
-		SQL.put("#sort_format",select.replaceAll("(sum|avg|max|min|count)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)","$3"));
+		String mtxReg="([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)";
+		if(matrix!=null){
+			SQL.put("#mr.reduce.format",matrix.replaceAll(mtxReg,"$1#$3"));
+			SQL.put("#mr.matrix",matrix.replaceAll(mtxReg,"$1$2($1#$3) as $4"));
+		}
+		SQL.put("#mr.select",select.replaceAll(mtxReg,"$1$2($1#$3) as $4"));
+		SQL.put("#mr.sort.format",select.replaceAll(mtxReg,"$4"));
 		
 		
+	}
+	/**
+	 * 获取SQL中的value
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public String get(String key) {
+		return SQL.get(key);
+	}
+
+	/**
+	 * 解析distinct字段
+	 * @param distinct
+	 * @return
+	 */
+	public static String getDistinct(String distinct){
 		
+		String regx="distinct\\s+\\((.*?)\\)";
 		
+		Pattern p = Pattern.compile(regx);
+		Matcher m = p.matcher(distinct);
+		String col = null;
+		if (m.find()) {
+			col = m.group(1);
+		}
+		
+		return col;
 	}
 	/**
 	 * 解析Select中的聚合函数
@@ -126,23 +171,14 @@ public class SqlParse {
 		return res.get(flag);
 	}
 
-	/**
-	 * 获取SQL中的value
-	 * 
-	 * @param key
-	 * @return
-	 */
-	public String get(String key) {
-		return SQL.get(key);
-	}
-
+	
 	/**
 	 * 从table串中解析表名
 	 * 
 	 * @param table  eg:classpath:student.txt s
 	 * @return
 	 */
-	public String getTable(String table) {
+	public static String getTable(String table) {
 		String[] splits = table.trim().split("\\s+");
 		if (splits.length == 1) {
 			return splits[0];
@@ -157,7 +193,7 @@ public class SqlParse {
 	 * @param table eg:classpath:student.txt s
 	 * @return
 	 */
-	public String getPath(String table) {
+	public static String getPath(String table) {
 		String[] splits = table.trim().split("\\s+");
 		if (splits.length == 1) {
 			return null;
@@ -165,22 +201,33 @@ public class SqlParse {
 			return splits[0];
 		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * 返回需要join的表的表名
 	 * 
 	 * @return
 	 */
-	public List<String> getJoinTables(){
-		List<String> joins=new ArrayList<String>();
+	private String getJoinTables(){
+		String joins="";
 		String join = this.get("join");
 		if (join != null) {
 			for (String en : join.split("\\|")) {
 				String table = en.split("on")[0];
-				String name = this.getTable(table);
-				joins.add(name);
+				String name = SqlParse.getTable(table);
+				joins=name+",";
 			}
 		}
-		 return joins;
+		if(!joins.equals("")){
+			joins=joins.substring(0,joins.length()-1);
+		}
+		return joins;
 	}
 	/**
 	 * 返回主表名称
@@ -189,8 +236,23 @@ public class SqlParse {
 	 */
 	private String getMainTable(){
 		String from = this.get("from");
-		return this.getTable(from);
+		return SqlParse.getTable(from);
 	}
 
+	/**
+	 * 返回输出目录
+	 * @return
+	 */
+	private String getOutPath(){
+		String create =this.get("create");
+		if(create!=null){
+			Pattern p = Pattern.compile("(.*)\\s+as.*");
+			Matcher m = p.matcher(create);
+			if (m.find()) {
+				create=m.group(1);
+			}
+		}
+		return create;
+	}
 	
 }
