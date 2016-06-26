@@ -13,6 +13,35 @@ import java.util.regex.Pattern;
  */
 public class SqlParse {
 
+	// 输入输出路径
+	public static final String INPUT="sql.input";
+	public static final String OUTPUT="sql.output";
+	
+	// 主表和Join表
+	public static final String MAIN_TABLE="#main.table";
+	public static final String JOIN_TABLE="#join.table";
+	
+	// SQL元语
+	public static final String CREATE="create";
+	public static final String SELECT="select";
+	public static final String FROM="from";
+	public static final String JOIN="join";
+	public static final String WHERE="where";
+	public static final String GROUP="group by";
+	public static final String ORDER="order by";
+	public static final String LIMIT="limit";
+	
+	public static final String MATRIX="matrix";
+	public static final String DISTINCT="distinct";
+	
+	
+	// MapReduce使用
+	public static final String MR_REDUCE_FORMAT="#mr.reduce.format";
+	public static final String MR_REDUCE_MATRIX="#mr.reduce.matrix";
+	public static final String MR_REDUCE_SELECT="#mr.reduce.select";
+	
+	public static final String MR_SORT_FORMAT="#mr.sort.format";
+	
 	/**
 	 * 存放SQL解析的结果
 	 */
@@ -48,8 +77,8 @@ public class SqlParse {
 					+ param);
 		}
 		
-		// 拆分select语句
-		String select=SQL.get("select");
+		// 从SQL中解析出 matrix和distinct
+		String select=SQL.get(SELECT);
 		String[] splits = select.split(",");
 		
 		String matrix="";
@@ -68,14 +97,12 @@ public class SqlParse {
 		}else{
 			matrix=null;
 		}
+		SQL.put(MATRIX,matrix);
+		SQL.put(DISTINCT,distinct);
 		
-		
-		
-		SQL.put("matrix",matrix);
-		SQL.put("distinct",distinct);
 		
 		// 格式化where语句
-		String where=SQL.get("where");
+		String where=SQL.get(WHERE);
 		if(where!=null){
 			where = where.replace("&&", "and").replace("||", "or")
 					.replaceAll("\\(|\\)", " $0 ");
@@ -84,27 +111,23 @@ public class SqlParse {
 			for (int i = 0; i < compare.length; i++) {
 				where = where.replaceAll("\\s*" + compare[i] + "\\s*", compare[i]);
 			}
-			SQL.put("where",where);
+			SQL.put(WHERE,where);
 		}
 		
-		
-		
-		
-		
 		// 主表和join表
-		SQL.put("#table.main",this.getMainTable());
-		SQL.put("#table.join",this.getJoinTables());
-		SQL.put("#outpath", this.getOutPath());
-		
+		SQL.put(MAIN_TABLE, this.getMainTable());
+		SQL.put(JOIN_TABLE, this.getJoinTables());
+		SQL.put(OUTPUT,this.getOutPath());
+		SQL.put(INPUT,this.getInputPath());
 		
 		// 用于MapReduce中
 		String mtxReg="([s,a,m,n,c])(um|vg|ax|in|ount)\\s*\\((.*?)\\)\\s+as\\s+([\\w|\\.]+)";
 		if(matrix!=null){
-			SQL.put("#mr.reduce.format",matrix.replaceAll(mtxReg,"$1#$3"));
-			SQL.put("#mr.matrix",matrix.replaceAll(mtxReg,"$1$2($1#$3) as $4"));
+			SQL.put(MR_REDUCE_FORMAT,matrix.replaceAll(mtxReg,"$1#$3"));
+			SQL.put(MR_REDUCE_MATRIX,matrix.replaceAll(mtxReg,"$1$2($1#$3) as $4"));
 		}
-		SQL.put("#mr.select",select.replaceAll(mtxReg,"$1$2($1#$3) as $4"));
-		SQL.put("#mr.sort.format",select.replaceAll(mtxReg,"$4"));
+		SQL.put(MR_REDUCE_SELECT,select.replaceAll(mtxReg,"$1$2($1#$3) as $4"));
+		SQL.put(MR_SORT_FORMAT,select.replaceAll(mtxReg,"$4"));
 		
 		
 	}
@@ -117,6 +140,16 @@ public class SqlParse {
 	public String get(String key) {
 		return SQL.get(key);
 	}
+	/**
+	 * 获取SQL中的value
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public String get(String key,String def) {
+		String val=SQL.get(key);
+		return val==null?def:val;
+	}
 
 	/**
 	 * 解析distinct字段
@@ -124,9 +157,7 @@ public class SqlParse {
 	 * @return
 	 */
 	public static String getDistinct(String distinct){
-		
 		String regx="distinct\\s+\\((.*?)\\)";
-		
 		Pattern p = Pattern.compile(regx);
 		Matcher m = p.matcher(distinct);
 		String col = null;
@@ -203,12 +234,6 @@ public class SqlParse {
 	}
 	
 	
-	
-	
-	
-	
-	
-	
 	/**
 	 * 返回需要join的表的表名
 	 * 
@@ -246,13 +271,37 @@ public class SqlParse {
 	private String getOutPath(){
 		String create =this.get("create");
 		if(create!=null){
-			Pattern p = Pattern.compile("(.*)\\s+as.*");
-			Matcher m = p.matcher(create);
-			if (m.find()) {
-				create=m.group(1);
-			}
+			create=create.split("\\s+")[0];
 		}
 		return create;
 	}
-	
+	/**
+	 * 返回输入目录 
+	 * eg:input:name,input:name
+	 * @return
+	 */
+	private String getInputPath(){
+		
+		String input=null;
+		
+		String regex="(\\S+)\\s*(as)?\\s*(\\S*)";
+		String replace="$1:$3";
+		
+		String from=this.get("from");
+		String joins=this.get("join");
+		
+		if(from!=null){
+			String tmp=from.trim().replaceAll(regex,replace);
+			input=(tmp.endsWith(":")?tmp.substring(0,tmp.length()-1):tmp)+",";
+		}
+		if (joins != null) {
+			for (String join : joins.split("\\|")) {
+				String table = join.split("on")[0];
+				String tmp=table.trim().replaceAll(regex,replace);
+				input+=(tmp.endsWith(":")?tmp.substring(0,tmp.length()-1):tmp)+",";
+			}
+		}
+		if(input!=null) input=input.substring(0, input.length()-1);
+		return input;
+	}
 }

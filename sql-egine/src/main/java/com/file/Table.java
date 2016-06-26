@@ -32,6 +32,10 @@ public class Table {
 	// 表格数据
 	protected List<String> rows=new ArrayList<String>();
 
+	// 当前集合是否为空
+	@SuppressWarnings("unused")
+	private boolean empty;
+	
 	public Table(){
 		
 	}
@@ -224,22 +228,21 @@ public class Table {
 	
 	
 	public Table setRows(List<String> rows) {
-		this.rows = this.filterRows(rows,this.filter);
+		this.rows = rows;
 		return this;
 	}
 	public Table setRow(String row) {
 		List<String> rows=new ArrayList<String>();
 		rows.add(row);
-		this.setRows(rows);
+		this.rows=rows;
 		return this;
 	}
 	/**
 	 * 添加一行数据
 	 * @param row
 	 */
-	public Table addRow(String r){
-		String row=this.filterRow(r,this.filter);
-		if(row!=null) this.rows.add(row);
+	public Table addRow(String row){
+		this.rows.add(row);
 		return this;
 	}
 	/**
@@ -247,22 +250,29 @@ public class Table {
 	 * @param row
 	 */
 	public Table addRows(List<String> rows){
-		this.rows.addAll(this.filterRows(rows,this.filter));
+		this.rows.addAll(rows);
 		return this;
 	}
 
-	private List<String> filterRows(List<String> rs,String filter){
+	public boolean isEmpty(){
+		if(this.rows==null||this.rows.isEmpty()){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	public Table filterRows(){
 		List<String> rows=new ArrayList<String>();
-		if(filter!=null&&rs!=null){
-			for(String r:rs){
+		if(filter!=null&&this.rows!=null){
+			for(String r:this.rows){
 				String nw=this.filterRow(r, filter);
 				if(nw!=null) rows.add(nw);
 			}
-			return rows;
+			this.rows=rows;
 		}
-		return rs;
+		return this;
 	}
-	private String filterRow(String r,String filter){
+	public String filterRow(String r,String filter){
 		if(filter!=null){
 			// 拆分SQL
 			Pattern p = Pattern.compile(filter);
@@ -293,6 +303,10 @@ public class Table {
 			return row;
 		}
 		return r;
+	}
+
+	public void setEmpty(boolean empty) {
+		this.empty = empty;
 	}
 	
 	

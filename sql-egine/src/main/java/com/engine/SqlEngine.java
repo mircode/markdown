@@ -19,7 +19,7 @@ public class SqlEngine {
 		this.sqlParse = new SqlParse(sql);
 
 		// 获取到主表
-		String from = sqlParse.get("from");
+		String from = sqlParse.get(SqlParse.FROM);
 		if (from != null) {
 
 			String name = SqlParse.getTable(from);
@@ -31,7 +31,7 @@ public class SqlEngine {
 		}
 
 		// 执行join
-		String join = sqlParse.get("join");
+		String join = sqlParse.get(SqlParse.JOIN);
 		if (join != null) {
 
 			for (String en : join.split("\\|")) {
@@ -46,34 +46,34 @@ public class SqlEngine {
 		}
 
 		// 执行where
-		String where = sqlParse.get("where");
+		String where = sqlParse.get(SqlParse.WHERE);
 		if (where != null) {
 			engine.where(where);
 		}
 
 		// 执行group by
-		String matrix = sqlParse.get("matrix");
-		String group = sqlParse.get("group by");
+		String matrix = sqlParse.get(SqlParse.MATRIX);
+		String group = sqlParse.get(SqlParse.GROUP);
 		if (group != null || matrix != null) {
 			engine.group(matrix, group);
 		}
 
 		// 执行过滤
-		String select = sqlParse.get("select");
+		String select = sqlParse.get(SqlParse.SELECT);
 		if (select != null) {
 			engine.select(select);
 		}
-		String distinct = sqlParse.get("distinct");
+		String distinct = sqlParse.get(SqlParse.DISTINCT);
 		if (distinct != null) {
 			engine.distinct(distinct);
 		}
 		// 执行order by
-		String order = sqlParse.get("order by");
+		String order = sqlParse.get(SqlParse.ORDER);
 		if (order != null) {
 			engine.order(order);
 		}
 		// 执行limit
-		String limit = sqlParse.get("limit");
+		String limit = sqlParse.get(SqlParse.LIMIT);
 		if (limit != null) {
 			engine.limit(limit);
 		}

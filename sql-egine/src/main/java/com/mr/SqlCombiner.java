@@ -27,15 +27,15 @@ public class SqlCombiner extends Reducer<Text, Text, Text, Text> {
 
 	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(SqlConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlConf.CONF_SQL);
 		sqlParse = new SqlParse(sql);
 
 		// main表
-		if (sqlParse.get("join") != null) {
+		if (sqlParse.get(SqlParse.JOIN) != null) {
 			serialize = context.getConfiguration()
-					.get(SqlConf.JOIN_TABLE);
+					.get(SqlConf.CONF_JOINTABLE);
 		} else {
-			serialize = context.getConfiguration().get(sqlParse.get("#table.main"));
+			serialize = context.getConfiguration().get(sqlParse.get(SqlParse.MAIN_TABLE));
 		}
 	}
 
@@ -48,8 +48,8 @@ public class SqlCombiner extends Reducer<Text, Text, Text, Text> {
 		// 构建SQL引擎
 		SqlExeEngine sqlEngine = new SqlExeEngine(table);
 		// 执行聚合操作
-		String matrix = sqlParse.get("matrix");
-		String group = sqlParse.get("group by");
+		String matrix = sqlParse.get(SqlParse.MATRIX);
+		String group = sqlParse.get(SqlParse.GROUP);
 		if (matrix != null) {
 			sqlEngine.combine(matrix, group);
 		}
@@ -69,7 +69,7 @@ public class SqlCombiner extends Reducer<Text, Text, Text, Text> {
 
 		// 反序列化生成table
 		Table table = new Table().diserialize(serialize);
-
+		table.setFilter(null);
 		List<String> rows = new ArrayList<String>();
 		for (Text t : values) {
 			rows.add(t.toString());

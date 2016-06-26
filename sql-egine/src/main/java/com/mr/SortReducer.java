@@ -28,15 +28,15 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 
 	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(SqlConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlConf.CONF_SQL);
 		sqlParse = new SqlParse(sql);
 
 		// main表
-		if (sqlParse.get("join") != null) {
+		if (sqlParse.get(SqlParse.JOIN) != null) {
 			serialize = context.getConfiguration()
-					.get(SqlConf.JOIN_TABLE);
+					.get(SqlConf.CONF_JOINTABLE);
 		} else {
-			serialize = context.getConfiguration().get(sqlParse.get("#table.main"));
+			serialize = context.getConfiguration().get(sqlParse.get(SqlParse.MAIN_TABLE));
 		}
 
 		super.setup(context);
@@ -51,21 +51,21 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		// 构建SQL引擎
 		SqlExeEngine sqlEngine = new SqlExeEngine(table);
 
-		String distinct = sqlParse.get("distinct");
+		String distinct = sqlParse.get(SqlParse.DISTINCT);
 		if (distinct != null) {
 			sqlEngine.distinct(distinct);
 		}
 		// 执行order by
-		String order = sqlParse.get("order by");
+		String order = sqlParse.get(SqlParse.ORDER);
 		if (order != null) {
 			sqlEngine.order(order);
 		}
 		// 执行limit
-		String limit = sqlParse.get("limit");
+		String limit = sqlParse.get(SqlParse.LIMIT);
 		if (limit != null) {
 			sqlEngine.limit(limit);
 		}
-
+		
 		writeTable(context, sqlEngine.getTable());
 	}
 
@@ -90,6 +90,7 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		// 分隔符
 		String split = table.getSplit();
 		table = new Table().diserialize(serialize);
+		table.setFilter(null);
 		String format = sqlParse.get("#mr.sort.format");
 		table.setFormat(format.replace(",", split));
 		table.setRows(getRows(values));

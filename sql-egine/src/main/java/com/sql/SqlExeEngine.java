@@ -253,6 +253,9 @@ public class SqlExeEngine {
 
 		List<String> rows = new ArrayList<String>();
 		for (int i = start; i < end; i++) {
+			if(i>=table.getRows().size()){
+				break;
+			}
 			rows.add(table.getRows().get(i));
 		}
 		table.setRows(rows);
@@ -489,12 +492,16 @@ public class SqlExeEngine {
 	 */
 	public String count(String field, List<String> rows) {
 		Double count = new Double(0);
-		for (String row : rows) {
-			String col = this.table.getColumns(row, field);
-			if (col.startsWith("#")) {
-				count += Double.parseDouble(col.substring(1));
-			} else {
-				count += 1;
+		if(field.equals("*")){
+			count+=rows.size();
+		}else{
+			for (String row : rows) {
+				String col = this.table.getColumns(row, field);
+				if (col.startsWith("#")) {
+					count += Double.parseDouble(col.substring(1));
+				} else {
+					count += 1;
+				}
 			}
 		}
 		return Db2Str(count);
@@ -592,6 +599,7 @@ public class SqlExeEngine {
 		return Db2Str(sum);
 	}
 
+	
 	private String Db2Str(Double res) {
 		return res.toString().matches("\\d+.0+") ? res.intValue() + "" : res
 				.toString();

@@ -1,7 +1,6 @@
 package com.engine;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -23,20 +22,20 @@ import com.mr.SqlCombiner;
 import com.mr.SqlMapper;
 import com.mr.SqlReducer;
 
+/**
+ * 通过Hadoop执行SQL任务
+ * @author 魏国兴
+ *
+ */
 public class MrEngine {
 
 	public static void main(String[] args) throws Exception {
-
 		// 配置文件路径
-		String path = SqlConf.class.getClassLoader().getResource("chain.conf")
-				.getPath();
-		path = URLDecoder.decode(path, "UTF-8");
-
+		String path = "classpath:airbook.conf";
 		// SQL引擎
 		MrEngine engine = new MrEngine();
 		// 执行SQL
 		engine.execute(path);
-
 	}
 
 	// 执行SQL
@@ -52,10 +51,9 @@ public class MrEngine {
 		}
 		// 打印执行结果
 		for (SqlConf conf : confs) {
-			System.out.println(conf.sql);
+			System.out.println(conf.get(SqlConf.CONF_SQL));
 			// 打印执行结果
-			System.out.println(conf.sqlParse.get("#mr.sort.format").replace(
-					",", conf.split));
+			System.out.println(conf.sqlParse.get("#mr.sort.format").replace(",", "|"));
 			List<String> result = HDFSHelper.readLines(conf, conf.get("#output")
 					+ "/part-r-00000",20);
 			for(String row:result)
@@ -74,7 +72,8 @@ public class MrEngine {
 		JobControl jobControl = new JobControl(MrEngine.class.getName()
 				+ "_JobChain");
 
-		if (conf.isGroup) {
+		
+		if (conf.getBoolean(SqlConf.CONF_GROUP, false)) {
 			Job mainJob = this.groupJob(conf);
 			// 主Job
 			ControlledJob cmainJob = new ControlledJob(
@@ -83,8 +82,7 @@ public class MrEngine {
 			jobControl.addJob(cmainJob);
 
 			Job sortJob = this.sortJob(conf);
-			Boolean isSort = Boolean.parseBoolean(conf.get("#isSort"));
-			if (isSort) {
+			if (conf.getBoolean(SqlConf.CONF_SORT, false)) {
 				// 排序Job
 				ControlledJob csortJob = new ControlledJob(
 						sortJob.getConfiguration());
@@ -134,11 +132,11 @@ public class MrEngine {
 		// #########################################
 
 		// 清除输出目录
-		HDFSHelper.deleteOnExit(conf, conf.get("#output"));
+		HDFSHelper.deleteOnExit(conf, conf.get(SqlConf.CONF_OUTPUT));
 
 		// 设置输入
-		Path in = new Path(conf.get("#input"));
-		Path out = new Path(conf.get("#output"));
+		Path in = new Path(conf.get(SqlConf.CONF_INPUT));
+		Path out = new Path(conf.get(SqlConf.CONF_OUTPUT));
 
 		Job job = Job.getInstance(conf, MrEngine.class.getName() + "_filter");
 		FileInputFormat.setInputPaths(job, in);
@@ -164,11 +162,11 @@ public class MrEngine {
 		// #########################################
 
 		// 清除输出目录
-		HDFSHelper.deleteOnExit(conf, conf.get("#tmp"));
+		HDFSHelper.deleteOnExit(conf, conf.get(SqlConf.CONF_TMP));
 
 		// 设置输入
-		Path in = new Path(conf.get("#input"));
-		Path out = new Path(conf.get("#tmp"));
+		Path in = new Path(conf.get(SqlConf.CONF_INPUT));
+		Path out = new Path(conf.get(SqlConf.CONF_TMP));
 
 		Job job = Job.getInstance(conf, MrEngine.class.getName() + "_main");
 		FileInputFormat.setInputPaths(job, in);
@@ -196,11 +194,11 @@ public class MrEngine {
 		// #########################################
 
 		// 清除输出目录
-		HDFSHelper.deleteOnExit(conf, conf.get("#output"));
+		HDFSHelper.deleteOnExit(conf, conf.get(SqlConf.CONF_OUTPUT));
 
 		// 设置输入
-		Path sortIn = new Path(conf.get("#tmp"));
-		Path sortOut = new Path(conf.get("#output"));
+		Path sortIn = new Path(conf.get(SqlConf.CONF_TMP));
+		Path sortOut = new Path(conf.get(SqlConf.CONF_OUTPUT));
 
 		Job job = Job.getInstance(conf, MrEngine.class.getName() + "_sort");
 

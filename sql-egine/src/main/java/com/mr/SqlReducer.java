@@ -28,15 +28,15 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 
 	public void setup(Context context) throws IOException, InterruptedException {
 		// sql对象
-		String sql = context.getConfiguration().get(SqlConf.LOG_SQL);
+		String sql = context.getConfiguration().get(SqlConf.CONF_SQL);
 		sqlParse = new SqlParse(sql);
 
 		// main表
-		if (sqlParse.get("join") != null) {
+		if (sqlParse.get(SqlParse.JOIN) != null) {
 			serialize = context.getConfiguration()
-					.get(SqlConf.JOIN_TABLE);
+					.get(SqlConf.CONF_JOINTABLE);
 		} else {
-			serialize = context.getConfiguration().get(sqlParse.get("#table.main"));
+			serialize = context.getConfiguration().get(sqlParse.get(SqlParse.MAIN_TABLE));
 		}
 	}
 
@@ -50,13 +50,13 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 		SqlExeEngine sqlEngine = new SqlExeEngine(table);
 
 		// 执行聚合操作
-		String matrix = sqlParse.get("#mr.matrix");
-		String group = sqlParse.get("group by");
+		String matrix = sqlParse.get("#mr.reduce.matrix");
+		String group = sqlParse.get(SqlParse.GROUP);
 		if (matrix != null) {
 			sqlEngine.group(matrix, group);
 		}
 		// 执行过滤
-		String select = sqlParse.get("#mr.select");
+		String select = sqlParse.get("#mr.reduce.select");
 		if (select != null) {
 			sqlEngine.select(select);
 		}
@@ -75,13 +75,14 @@ public class SqlReducer extends Reducer<Text, Text, NullWritable, Text> {
 
 		// 反序列化生成table
 		Table table = new Table().diserialize(serialize);
+		table.setFilter(null);
 		// 分隔符
 		String split = table.getSplit();
 
 		// Mapper输入格式：t.id|t.name|count(t.id) as t.count
 		// 目标格式：t.id|t.name|c#t.id
 		// 更具matrix和group计算新的table格式
-		String group = sqlParse.get("group by");
+		String group = sqlParse.get(SqlParse.GROUP);
 		String format =sqlParse.get("#mr.reduce.format").replace(",", split);
 		if(group!=null){
 			 format = group.replace(",", split) + split

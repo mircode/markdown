@@ -25,47 +25,42 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 	 private Map<String,Table> joins=new HashMap<String,Table>();
 	 // SQL解析器
 	 private SqlParse sqlParse=null;
-	 
-	 // 需要过滤行的正则表达试
-	 private String regex=null;
-	 
+	
 	 public void setup(Context context) throws IOException, InterruptedException {
 		 
 		 // sql对象
-		 String sql=context.getConfiguration().get(SqlConf.LOG_SQL);
+		 String sql=context.getConfiguration().get(SqlConf.CONF_SQL);
 		 sqlParse=new SqlParse(sql);
 		 
 		 // main表
-		 String json=context.getConfiguration().get(sqlParse.get("#table.main"));
+		 String json=context.getConfiguration().get(sqlParse.get(SqlParse.MAIN_TABLE));
 		 this.table=new Table().diserialize(json);
 		 
 		
 		 // join表
-		 String join = sqlParse.get("join");
+		 String join = sqlParse.get(SqlParse.JOIN);
 		  if (join != null) {
-			 String joins[]=sqlParse.get("#table.join").split(",");
+			 String joins[]=sqlParse.get(SqlParse.JOIN_TABLE).split(",");
 			 for(String t : joins){
 				json=context.getConfiguration().get(t);
 				Table table=new HDFSTable(context.getConfiguration(), new Table().diserialize(json));
 				this.joins.put(table.getName(),table);
 			 }
 		 }
-		 this.regex=context.getConfiguration().get("#regex");
 		 super.setup(context);
 	 }
 	
 	 public void map(Object key,Text value,Context context) throws IOException, InterruptedException {
 		
-		// 过滤不必要的行
-		if(regex!=null&&!value.toString().matches(regex)) return;
-		table.setRow(value.toString());
-		if(table.getRows()==null||table.getRows().size()==0) return;
+		// 添加当前行并执行过滤
+		boolean isEmpty=table.setRow(value.toString()).filterRows().isEmpty();
+		if(isEmpty) return;
 		
 		// 构建SQL引擎
 		SqlExeEngine sqlEngine=new SqlExeEngine(table);
 		
 		// 连接Join表
-		String join = sqlParse.get("join");
+		String join = sqlParse.get(SqlParse.JOIN);
 		if (join != null) {
 			for (String en : join.split("\\|")) {
 				String table = en.split("on")[0];
@@ -75,13 +70,13 @@ public class SqlMapper extends Mapper<Object,Text,Text,Text> {
 			}
 		}
 		// 执行where
-		String where = sqlParse.get("where");
+		String where = sqlParse.get(SqlParse.WHERE);
 		if (where != null) {
 			sqlEngine.where(where);
 		}
 		
 		// 执行分组
-		String group = sqlParse.get("group by");
+		String group = sqlParse.get(SqlParse.GROUP);
 		for(String row:sqlEngine.getTable().getRows()){
 			String ky="id";// 默认按照id分组
 			if(group!=null){
