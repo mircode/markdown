@@ -8,6 +8,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.conf.SqlConf;
+
 /**
  * 从文件中加载Table
  * 
@@ -42,12 +44,14 @@ public class FileTable extends Table {
 				name = name.substring(0, name.lastIndexOf("."));
 			}
 		}
-
+		if(input.startsWith("classpath:")){
+			input=getResource(input);
+		}
 		if (split == null)
 			split = this.readSplit(input);
 		if (format == null)
 			format = this.readFormat(input);
-
+		
 		this.name = name;
 		this.input = input;
 		this.split = split;
@@ -177,5 +181,14 @@ public class FileTable extends Table {
 		}
 		return rows.size() == 0 ? null : rows;
 	}
-
+	private String getResource(String resource) {
+		String path = SqlConf.class.getClassLoader().getResource(resource.substring("classpath:".length()))
+				.getPath();
+		try {
+			path = URLDecoder.decode(path, "UTF-8");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return path;
+	}
 }

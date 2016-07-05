@@ -31,7 +31,12 @@ public class MrEngine {
 
 	public static void main(String[] args) throws Exception {
 		// 配置文件路径
-		String path = "classpath:airbook.conf";
+		String path = "classpath:chain.conf";
+		
+		if(args.length>1){
+			path=args[1];
+		}
+		
 		// SQL引擎
 		MrEngine engine = new MrEngine();
 		// 执行SQL

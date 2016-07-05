@@ -26,8 +26,8 @@ public class SqlEngine {
 			String input = SqlParse.getPath(from);
 
 			// 从input中解析出format和split
-			this.table = new Table(name, null, null, input,null);
-
+			this.table = new FileTable(name, input, null, null,null);
+			engine.setTable(table);
 		}
 
 		// 执行join
@@ -41,7 +41,7 @@ public class SqlEngine {
 				String name = SqlParse.getTable(table);
 				String input = SqlParse.getPath(table);
 
-				engine.join(new Table(name, null, null, input,null), on);
+				engine.join(new FileTable(name, input, null, null,null), on);
 			}
 		}
 
@@ -87,8 +87,8 @@ public class SqlEngine {
 		String sql = null;
 		SqlExeEngine sqlEngine = null;
 
-		Table student = null;
-		Table teacher = null;
+		Table student = new FileTable("s","classpath:student.txt");
+		Table teacher = new FileTable("t","classpath:teacher.txt");;
 
 		// 简单查询
 		sql = "select id,name,grade from classpath:student.txt student where id>10 order by grade desc limit 0,10";
@@ -96,7 +96,6 @@ public class SqlEngine {
 		sqlEngine = new SqlEngine().SQL(sql);
 		System.out.println(sqlEngine);
 
-		student = new FileTable("classpath:student.txt");
 		sqlEngine = new SqlExeEngine(student).where("id>10").order("grade desc")
 				.limit("0,10").select("id,name,grade");
 
