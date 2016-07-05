@@ -92,7 +92,9 @@ public class SortReducer extends Reducer<Text, Text, NullWritable, Text> {
 		table = new Table().diserialize(serialize);
 		table.setFilter(null);
 		String format = sqlParse.get("#mr.sort.format");
-		table.setFormat(format.replace(",", split));
+		if(!format.equals("*")){
+			table.setFormat(format.replace(",", split));
+		}
 		table.setRows(getRows(values));
 
 		return table;
